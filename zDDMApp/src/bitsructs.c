@@ -38,7 +38,7 @@ struct chipstr{
      unsigned char sl;		/* 0=internal 2pA leakage, 1=disabled */
      unsigned char ts;		/* Shaping time */
      unsigned char rt;		/* 1=timing ramp duration x 3 */
-     unsigned char spur;		/* 1=enable pileup rejector */
+     unsigned char spur;	/* 1=enable pileup rejector */
      unsigned char sse;		/* 1=enable multiple-firing suppression */
      unsigned char tr;		/* timing ramp adjust */
      unsigned char ss;		/* multiple firing time adjust */
@@ -46,7 +46,7 @@ struct chipstr{
      unsigned char g;		/* Gain select */
      unsigned char slh;		/* internal leakage adjust */
      unsigned char sp;		/* Input polarity; 1=positive, 0=negative */
-     unsigned char saux;		/* Enable monitor output */
+     unsigned char saux;	/* Enable monitor output */
      unsigned char sbm;		/* Enable output monitor buffer */
      unsigned char tm;		/* Timing mode; 0=ToA, 1=ToT */
 };
