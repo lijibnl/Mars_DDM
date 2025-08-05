@@ -278,7 +278,7 @@ int lkuptbl[512];
  *     bit 1 = testmode
  *     bit 2 = rst
  ******************************************/
-void fifo_enable()
+void fifo_enable()  // Ji: not needed
 {
     int rdback, newval;
 
@@ -302,7 +302,7 @@ void fifo_enable()
  *     bit 1 = testmode
  *     bit 2 = rst
  ******************************************/
-void fifo_disable()
+void fifo_disable()  // Ji: not needed
 {
     int rdback, newval;
     FASTLOCK(&fpga_write_lock);
@@ -324,7 +324,7 @@ void fifo_disable()
  *     bit 1 = testmode
  *     bit 2 = rst
  ******************************************/
-void fifo_reset()
+void fifo_reset()  // Ji: not needed
 {
     int rdback, newval;
     FASTLOCK(&fpga_write_lock);
@@ -566,6 +566,7 @@ STATIC long zDDM_init(int after)
     printf("INT64 unavailable\n");
 #endif
 
+    // Ji: done during start up
     if (192 == zDDM_NCHAN)
     {
         pl_register_write(fd, DETECTOR_TYPE, 0);
@@ -663,6 +664,8 @@ STATIC long zDDM_init_record(struct zDDMRecord *psr, CALLBACK *pcallback)
     return (0);
 }
 
+// Ji: send zddm_arm request to write TRIG only.
+// Read FRAME_NO separately (through polling?)
 STATIC long zDDM_arm(struct zDDMRecord *pscal, int val)
 {
     unsigned int *intens;
@@ -785,7 +788,7 @@ STATIC long zDDM_reset(struct zDDMRecord *pscal)
         FASTLOCK(&fpga_write_lock);
         fifo_disable();
         // fpgabase[TRIG]=0;
-        pl_register_write(fd, TRIG, 0);
+        pl_register_write(fd, TRIG, 0);        // Ji: done by writing to TRIG
         FASTUNLOCK(&fpga_write_lock);
     }
     /* clear monitor spectrum */
@@ -836,13 +839,16 @@ STATIC long zDDM_write_preset(zDDMRecord *psr)
     pr1 = (uint64_t)pdet->pr1;
     // #endif
 
+
+    // Set count time.
+    // Currently implemented as a 64-bit. Consider revert back to 32-bit.
     // pr1_lo = (uint32_t)(pr1 & 0xffffffff);
     // pr1_hi = (uint32_t)(pr1 >> 32);
 
     printf("Write register COUNT_TIME_LO as %u\n", (uint32_t)(pr1 & 0xffffffff));
-    pl_register_write(fd, COUNT_TIME_LO, (uint32_t)(pr1 & 0xffffffff));
+    pl_register_write(fd, COUNT_TIME_LO, (uint32_t)(pr1 & 0xffffffff));        // Ji: done by writing to COUNT_TIME_LO
 
-    printf("Write register COUNT_TIME_HI as %u\n", (uint32_t)(pr1 >> 32));
+    printf("Write register COUNT_TIME_HI as %u\n", (uint32_t)(pr1 >> 32));     // Ji: done by writing to COUNT_TIME_HI
     pl_register_write(fd, COUNT_TIME_HI, (uint32_t)(pr1 >> 32));
 
     FASTUNLOCK(&fpga_write_lock);
@@ -1622,6 +1628,7 @@ STATIC long zDDM_done(zDDMRecord *psr)
 }
 
 void latch_conf(void)
+// Ji: no longer needed. Implemented in FreeRTOS
 {
     /* toggle load flag */
     // fpgabase[MARS_CONF_LOAD]=2;
@@ -1631,6 +1638,7 @@ void latch_conf(void)
 }
 
 int stuff_mars(void *pscal)
+// Ji: no longer need register write. Send STUFF-MARS request, include loads.
 { /* stuff structs into chp */
     int i, j;
 
@@ -1717,6 +1725,7 @@ int stuff_mars(void *pscal)
  *   bit 0 = data
  *   bit 1 = clk
  ******************************************/
+// Ji: no longer needed. Implemented in FreeRTOS
 void send_spi_bit(int chipSel, int val)
 {
     int sda;
@@ -1742,6 +1751,7 @@ void send_spi_bit(int chipSel, int val)
 }
 
 int load_ad9252reg(int chipSel, int addr, int data)
+// Ji: no longer needed. Implemented in FreeRTOS
 {
 
     int i, j, k;
@@ -1772,6 +1782,7 @@ int load_ad9252reg(int chipSel, int addr, int data)
 }
 
 int ad9252_cnfg(int chipNum, int addr, int data)
+// Ji: send AD9252 CNFG request.
 {
 
     int chipSel;
@@ -1905,6 +1916,7 @@ void registerpeek(void)
 epicsExportRegistrar(registerpeek);
 
 int poke(int reg, int val)
+// Ji: send a single word request
 {
     /*zmq_write(reg,val);*/
     pl_register_write(fd, reg, val);
