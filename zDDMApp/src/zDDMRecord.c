@@ -1199,9 +1199,9 @@ static long special(dbAddr *paddr, int after)
 		  channelstr[pscal->monch].sel=pscal->loao;
 		  mars_modified=1;
 		  }
-		// db_post_events(pscal,&(pscal->monch),DBE_VALUE|DBE_ARCHIVE);
-		// db_post_events(pscal,pscal->pspct,DBE_VALUE|DBE_ARCHIVE);
-		// db_post_events(pscal,pscal->pspctx,DBE_VALUE|DBE_ARCHIVE);
+		db_post_events(pscal,&(pscal->monch),DBE_VALUE|DBE_ARCHIVE);
+		db_post_events(pscal,pscal->pspct,DBE_VALUE|DBE_ARCHIVE);
+		db_post_events(pscal,pscal->pspctx,DBE_VALUE|DBE_ARCHIVE);
 		break;
 
 	case zDDMRecordPOL: /* set input polarity */
