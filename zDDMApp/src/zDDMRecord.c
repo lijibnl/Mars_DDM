@@ -181,6 +181,76 @@ static void monitor();
 static void updateCounts(zDDMRecord *pscal);
 static long init_record(zDDMRecord *pscal, int pass);
 
+static int tsgr_to_reg(unsigned int tsgr, unsigned int *regval)
+{
+	static const unsigned int mapping[] = {
+		0,
+		9,
+		99,
+		999,
+		9999,
+		99999,
+		999999,
+		9999999,
+		99999999
+	};
+
+	if (tsgr >= (sizeof(mapping) / sizeof(mapping[0]))) {
+		return -1;
+	}
+
+	*regval = mapping[tsgr];
+	return 0;
+}
+
+static int reg_to_tsgr(unsigned int regval, unsigned short *tsgr)
+{
+	switch (regval) {
+	case 0:
+		*tsgr = 0;
+		return 0;
+	case 9:
+		*tsgr = 1;
+		return 0;
+	case 99:
+		*tsgr = 2;
+		return 0;
+	case 999:
+		*tsgr = 3;
+		return 0;
+	case 9999:
+		*tsgr = 4;
+		return 0;
+	case 99999:
+		*tsgr = 5;
+		return 0;
+	case 999999:
+		*tsgr = 6;
+		return 0;
+	case 9999999:
+		*tsgr = 7;
+		return 0;
+	case 99999999:
+		*tsgr = 8;
+		return 0;
+	default:
+		return -1;
+	}
+}
+
+static void reject_menu_write(zDDMRecord *pscal,
+	const char *fieldName,
+	unsigned short *field,
+	unsigned short restoreValue)
+{
+	*field = restoreValue;
+	recGblSetSevr(pscal, WRITE_ALARM, INVALID_ALARM);
+	errlogPrintf("zDDMRecord: rejecting invalid %s value for %s\n",
+		fieldName,
+		pscal->name);
+	db_post_events(pscal, field, DBE_VALUE | DBE_ARCHIVE);
+}
+
 static void deviceCallbackFunc(CALLBACK *pcb)
 {
         zDDMRecord *pscal;
@@ -1105,6 +1175,46 @@ static long special(dbAddr *paddr, int after)
                 db_post_events(pscal,&(pscal->mode),DBE_VALUE|DBE_ARCHIVE);
 		// db_post_events(pscal,&(pscal->cnt),DBE_VALUE|DBE_ARCHIVE);
                 break;
+
+	case zDDMRecordETRST:
+		/* Firmware doc migration: $(P)$(R)ResetTimestamp */
+		Debug(2, "special: ETRST %i\n", pscal->etrst);
+		if (pscal->etrst != 0) {
+			pl_register_write(fd, TIMESTAMP_RESET, 1);
+			pl_register_write(fd, TIMESTAMP_RESET, 0);
+			pscal->etrst = 0;
+			db_post_events(pscal,&(pscal->etrst),DBE_VALUE|DBE_ARCHIVE);
+		}
+		break;
+
+	case zDDMRecordTSGR:
+		/* Firmware doc migration: $(P)$(R)TimestampGranuality */
+		Debug(2, "special: TSGR %i\n", pscal->tsgr);
+		if (tsgr_to_reg(pscal->tsgr, &addr) != 0) {
+			unsigned int regval = pl_register_read(fd, TIMESTAMP_GRANUALITY);
+			unsigned short restoreValue = 0;
+			if (reg_to_tsgr(regval, &restoreValue) != 0) {
+				restoreValue = 0;
+			}
+			reject_menu_write(pscal, "TSGR", &(pscal->tsgr), restoreValue);
+			break;
+		}
+		pl_register_write(fd, TIMESTAMP_GRANUALITY, addr);
+		db_post_events(pscal,&(pscal->tsgr),DBE_VALUE|DBE_ARCHIVE);
+		break;
+
+	case zDDMRecordTRGM:
+		/* Firmware doc migration: $(P)$(R)TrigMode */
+		Debug(2, "special: TRGM %i\n", pscal->trgm);
+		if (pscal->trgm > 2) {
+			unsigned int regval = pl_register_read(fd, TRIG_MODE);
+			unsigned short restoreValue = (regval <= 2) ? regval : 0;
+			reject_menu_write(pscal, "TRGM", &(pscal->trgm), restoreValue);
+			break;
+		}
+		pl_register_write(fd, TRIG_MODE, pscal->trgm);
+		db_post_events(pscal,&(pscal->trgm),DBE_VALUE|DBE_ARCHIVE);
+		break;
 
 	case zDDMRecordGMON: /* set switch for channel monitors or others */
 	         if(pscal->gmon==0){/* All monitors off. M0=0, C0-C4=00000*/

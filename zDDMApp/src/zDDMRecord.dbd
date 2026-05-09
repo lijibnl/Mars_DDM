@@ -47,6 +47,29 @@ menu(zddmTPENB) {
 	choice(zddmscTPENB_1,"On")
 }
 
+menu(zddmETRST) {
+	choice(zddmscETRST_0,"Idle")
+	choice(zddmscETRST_1,"Reset")
+}
+
+menu(zddmTSGR) {
+	choice(zddmscTSGR_0,"10 ns")
+	choice(zddmscTSGR_1,"100 ns")
+	choice(zddmscTSGR_2,"1 us")
+	choice(zddmscTSGR_3,"10 us")
+	choice(zddmscTSGR_4,"100 us")
+	choice(zddmscTSGR_5,"1 ms")
+	choice(zddmscTSGR_6,"10 ms")
+	choice(zddmscTSGR_7,"100 ms")
+	choice(zddmscTSGR_8,"1 s")
+}
+
+menu(zddmTRGM) {
+	choice(zddmscTRGM_0,"Software")
+	choice(zddmscTRGM_1,"External pulse")
+	choice(zddmscTRGM_2,"External positive edge")
+}
+
 menu(zddmGMON) {
 	choice(zddmGMON_0,"Off")
 	choice(zddmGMON_1,"Temperature")
@@ -324,6 +347,36 @@ recordtype(zDDM) {
                 interest(1)
                 menu(zddmMODE)
         }
+
+	field(ETRST,DBF_MENU) {
+		prompt("ResetTimestamp")
+		promptgroup(GUI_COMMON)
+		special(SPC_MOD)
+		pp(TRUE)
+		interest(1)
+		initial("0")
+		menu(zddmETRST)
+	}
+
+	field(TSGR,DBF_MENU) {
+		prompt("TimestampGranuality")
+		promptgroup(GUI_COMMON)
+		special(SPC_MOD)
+		pp(TRUE)
+		interest(1)
+		initial("0")
+		menu(zddmTSGR)
+	}
+
+	field(TRGM,DBF_MENU) {
+		prompt("TrigMode")
+		promptgroup(GUI_COMMON)
+		special(SPC_MOD)
+		pp(TRUE)
+		interest(1)
+		initial("0")
+		menu(zddmTRGM)
+	}
 
  	field(RUNNO,DBF_ULONG) {
                 prompt("Run Number")

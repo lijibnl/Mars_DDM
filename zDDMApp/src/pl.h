@@ -12,6 +12,7 @@
 #define DETECTOR_TYPE       6
 #define MARS_RDOUT_ENB      8 
 #define EVENT_TIME_CNTR     9
+#define TIMESTAMP_RESET     EVENT_TIME_CNTR
 #define SIM_EVT_SEL        10
 #define SIM_EVENT_RATE     11
 #define ADC_SPI            12
@@ -39,6 +40,10 @@
 #define COUNT_TIME_HI      54
 #define FRAME_NO           55
 #define COUNT_MODE         56
+
+/* v21 additions */
+#define TIMESTAMP_GRANUALITY 128
+#define TRIG_MODE           129
 
 
 
